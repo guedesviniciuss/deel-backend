@@ -7,16 +7,18 @@ class ListBestClientsService {
     Jobs.paid=true AND Jobs.paymentDate BETWEEN '${start}' AND '${end}'` : '';
 
     const rawQuery = `
-      SELECT Profiles.firstName || ' ' || Profiles.lastName as fullName, Jobs.price as paid FROM Profiles
+      SELECT Profiles.id, Profiles.firstName || ' ' || Profiles.lastName as fullName, SUM(Jobs.price) as paid FROM Profiles
       INNER JOIN Contracts
       ON
-        Profiles.id=Contracts.ContractorId
+        Profiles.id=Contracts.ClientId
       INNER JOIN Jobs
       ON
         Jobs.ContractId=Contracts.id
       ${queryCondition}
       GROUP BY
         Profiles.firstName
+      ORDER BY
+        SUM(Jobs.paid) DESC
       LIMIT ${limit};
     `;
 
