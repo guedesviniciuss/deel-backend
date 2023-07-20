@@ -1,5 +1,7 @@
 const { AppError } = require('../../../errors/AppError');
-const { Job, Contract, Profile } = require('../../../repositories/entities/model');
+const {
+  sequelize, Job, Contract, Profile,
+} = require('../../../repositories/entities/model');
 
 class PayJobService {
   async execute(jobId, profile) {
@@ -31,14 +33,33 @@ class PayJobService {
       throw new AppError('Insufficient funds', 400);
     }
 
-    // withdrall from client
-    await Profile.decrement({ balance: jobPrice }, { where: { id: profileId } });
+    let transaction;
+    try {
+      transaction = await sequelize.transaction();
 
-    // adds at contractor's account
-    await Profile.increment({ balance: jobPrice }, { where: { id: contract.ContractorId } });
+      // withdrall from client
+      await Profile.decrement({ balance: jobPrice }, { where: { id: profileId } }, { transaction });
 
-    // change payment status
-    await Job.update({ paid: true, paymentDate: new Date() }, { where: { id: job.id } });
+      // adds at contractor's account
+      await Profile.increment(
+        { balance: jobPrice },
+        { where: { id: contract.ContractorId } },
+        { transaction },
+      );
+
+      // change payment status
+      await Job.update(
+        { paid: true, paymentDate: new Date() },
+        { where: { id: job.id } },
+        { transaction },
+      );
+      await transaction.commit();
+    } catch (err) {
+      if (transaction) {
+        await transaction.rollback();
+      }
+      throw new AppError('Something wrong happened, try again later', 400);
+    }
   }
 }
 

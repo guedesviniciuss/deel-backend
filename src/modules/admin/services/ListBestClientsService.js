@@ -1,10 +1,17 @@
 const { QueryTypes } = require('sequelize');
+
 const { sequelize } = require('../../../repositories/entities/model');
+const { validDate } = require('../../../utils/validDate');
+
+const QUERY_LIMIT = 2;
 
 class ListBestClientsService {
-  async execute(start, end, limit = 2) {
+  async execute(start, end, limit = QUERY_LIMIT) {
+    const startDate = validDate(start);
+    const endDate = validDate(end);
+
     const queryCondition = start && end ? `WHERE
-    Jobs.paid=true AND Jobs.paymentDate BETWEEN '${start}' AND '${end}'` : '';
+    Jobs.paid=true AND Jobs.paymentDate BETWEEN '${startDate}' AND '${endDate}'` : '';
 
     const rawQuery = `
       SELECT Profiles.id, Profiles.firstName || ' ' || Profiles.lastName as fullName, SUM(Jobs.price) as paid FROM Profiles

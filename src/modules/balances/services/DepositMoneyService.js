@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Sequelize } = require('sequelize');
 const {
   sequelize, Profile, Contract, Job,
 } = require('../../../repositories/entities/model');
@@ -8,7 +8,11 @@ const { AppError } = require('../../../errors/AppError');
 const DEPOSIT_PERCENTUAL_FACTOR = 0.25;
 
 class DepositMoneyService {
-  async execute(userId, depositValue) {
+  async execute(userId, profileId, depositValue) {
+    if (userId.toString() !== profileId.toString()) {
+      throw new AppError('Not possible to add money to the user account', 400);
+    }
+
     const client = await Profile.findOne({
       where: {
         id: userId,
@@ -27,10 +31,10 @@ class DepositMoneyService {
           [sequelize.fn('sum', sequelize.col('price')), 'total'],
         ],
         where: {
-          paymentDate: { [Op.is]: null },
-          [Op.or]: [
-            { paid: { [Op.is]: null } },
-            { paid: { [Op.is]: false } },
+          paymentDate: { [Sequelize.Op.is]: null },
+          [Sequelize.Op.or]: [
+            { paid: { [Sequelize.Op.is]: null } },
+            { paid: { [Sequelize.Op.is]: false } },
           ],
         },
         include: [
@@ -49,7 +53,7 @@ class DepositMoneyService {
     const limitValueToPay = totalJobsToPay * DEPOSIT_PERCENTUAL_FACTOR;
 
     if (depositValue > limitValueToPay) {
-      throw new AppError(`Value exceeds 25%, max value to pay: ${limitValueToPay}`, 404);
+      throw new AppError(`Value exceeds 25%, max value to pay: ${limitValueToPay}`, 400);
     }
 
     await Profile.increment({ balance: depositValue }, { where: { id: userId } });

@@ -3,10 +3,9 @@ const {
 } = require('express-validator');
 
 const depositValidator = () => [
-  body('depositValue').isNumeric().notEmpty(),
+  body('depositValue').isFloat({ min: 0 }).notEmpty(),
 ];
 
-// TODO: Validate start and end time
 const rangeDate = [
   query('start').optional(),
   query('end').optional(),

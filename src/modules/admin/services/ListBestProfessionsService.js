@@ -1,11 +1,16 @@
 const { QueryTypes } = require('sequelize');
+
 const { sequelize } = require('../../../repositories/entities/model');
+const { validDate } = require('../../../utils/validDate');
 
 class ListBestProfessionsService {
   async execute(start, end) {
+    const startDate = validDate(start);
+    const endDate = validDate(end);
+
     const queryCondition = start && end ? `
-    WHERE
-    Jobs.paymentDate IS NOT NULL AND Jobs.paymentDate BETWEEN '${start}' AND '${end}'
+      WHERE
+      Jobs.paymentDate IS NOT NULL AND Jobs.paymentDate BETWEEN '${startDate}' AND '${endDate}'
     ` : '';
 
     const rawQuery = `

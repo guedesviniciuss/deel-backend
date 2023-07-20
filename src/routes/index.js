@@ -11,7 +11,7 @@ const routes = Router();
 
 routes.use('/contracts', getProfile, contractRoutes);
 routes.use('/jobs', getProfile, jobsRoutes);
-routes.use('/balances', balanceRoutes);
+routes.use('/balances', getProfile, balanceRoutes);
 routes.use('/admin', adminRoutes);
 
 module.exports = {
